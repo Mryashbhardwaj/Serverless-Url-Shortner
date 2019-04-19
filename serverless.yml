@@ -1,0 +1,64 @@
+service: Url-Shortner # NOTE: update this with your service name
+
+provider:
+  name: aws
+  runtime: nodejs8.10
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "s3:CreateBucket"
+      Resource: 
+        - "*"
+    - Effect: "Allow"
+      Action:
+        - 'lambda:*'
+      Resource:
+        - "*"
+    - Effect: "Allow"
+      Action: 
+        - dynamodb:DescribeTable
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:Getitem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+      Resource: "arn:aws:dynamodb:us-east-1:*:*"
+
+resources:
+  Resources:
+    Records:
+      Type: AWS::DynamoDB::Table
+      DeletionPolicy: Retain
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 5
+          WriteCapacityUnits: 5
+        TableName: 'records'
+
+functions:
+  shortener:
+    handler: handler.shorten
+    events:
+      - http:
+          path: /shorten
+          method: post
+
+  retriever:
+    handler: handler.retreive
+    events:
+      - http:
+          path: /retreive
+          method: get
+
+
+# following enables testing the function in local via
+# $> serverless -- offline
+plugins:
+  - serverless-offline
