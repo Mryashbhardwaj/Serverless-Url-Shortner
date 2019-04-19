@@ -4,7 +4,7 @@ Exposes two AWS LambdaAPI that consumes an AWS DynamoDB instance to shorten URLs
 Start with installing 'aws cli' to configure AWS credentials.
 once AWS is configured , do 
 >npm install
->sls deploy
+>&& sls deploy
 
 Shorten [Post] Api JSON template:
 Request Body = {
