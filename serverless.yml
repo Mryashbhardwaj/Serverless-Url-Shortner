@@ -1,8 +1,18 @@
-service: Url-Shortner # NOTE: update this with your service name
+service: url-shortner # NOTE: update this with your service name
+
+custom:
+  config:
+    db:
+      user: 'postgres'
+      pass: ''
+      database: 'urlshortner'
+      host : '127.0.0.1'
+      dialect: 'postgres'
 
 provider:
   name: aws
   runtime: nodejs8.10
+  stage: dev
   iamRoleStatements:
     - Effect: "Allow"
       Action:
@@ -14,33 +24,13 @@ provider:
         - 'lambda:*'
       Resource:
         - "*"
-    - Effect: "Allow"
-      Action: 
-        - dynamodb:DescribeTable
-        - dynamodb:Query
-        - dynamodb:Scan
-        - dynamodb:Getitem
-        - dynamodb:PutItem
-        - dynamodb:UpdateItem
-        - dynamodb:DeleteItem
-      Resource: "arn:aws:dynamodb:us-east-1:*:*"
-
-resources:
-  Resources:
-    Records:
-      Type: AWS::DynamoDB::Table
-      DeletionPolicy: Retain
-      Properties:
-        AttributeDefinitions:
-          - AttributeName: id
-            AttributeType: S
-        KeySchema:
-          - AttributeName: id
-            KeyType: HASH
-        ProvisionedThroughput:
-          ReadCapacityUnits: 5
-          WriteCapacityUnits: 5
-        TableName: 'records'
+  environment: 
+    DB_USER: ${ssm:/url-shortner/${self:provider.stage}/db/user~true, self:custom.config.db.user}
+    DB_PASSWORD: ${ssm:/url-shortner/${self:provider.stage}/db/pass~true, self:custom.config.db.pass}
+    DB_DATABASE: ${ssm:/url-shortner/${self:provider.stage}/db/database~true, self:custom.config.db.database}
+    DB_HOST: ${ssm:/url-shortner/${self:provider.stage}/db/host~true, self:custom.config.db.host}
+    DB_DIALECT: ${ssm:/url-shortner/${self:provider.stage}/db/dialect~true, self:custom.config.db.dialect}
+    ELASTIC_INDEX_NAME: ${self:service}
 
 functions:
   shortener:
@@ -56,8 +46,7 @@ functions:
       - http:
           path: /retreive
           method: get
-
-
+          
 # following enables testing the function in local via
 # $> serverless -- offline
 plugins:
